@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/alexandervashurin/trello-golang/handlers"
 	"github.com/alexandervashurin/trello-golang/storage"
@@ -34,6 +35,10 @@ func main() {
 
 	// Запуск сервера
 	port := ":8080"
-	log.Printf("Server starting on port %s", port)
-	log.Fatal(http.ListenAndServe(port, mux))
+	log.Printf("🚀 Server starting on port %s", port)
+
+	if err := http.ListenAndServe(port, mux); err != nil {
+		log.Printf("❌ Server error: %v", err)
+		os.Exit(1)
+	}
 }
