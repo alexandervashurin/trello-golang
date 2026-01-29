@@ -1,0 +1,5 @@
+2026-01-29T08:21:40.563Z [ctureModificationListener$Companion.initForProject] INFO ProjectStructureModificationListener is init for project trello-golang
+2026-01-29T08:21:40.570Z [s.AiToolwindowsInitializer.reinitializeToolWindows] INFO AI state ENABLED
+2026-01-29T08:21:40.657Z [intellij.services.AiInitializeManager.initializeAI] INFO IntelliJ listens web server on port: 63342
+2026-01-29T08:21:40.811Z [y.aiintellij.ui.panels.AIToolWindowLogPanel.<init>] INFO initializing a logs panel
+2026-01-29T08:21:40.910Z [y.aiintellij.ui.panels.AIToolWindowLogPanel.<init>] INFO initializing a logs panel
