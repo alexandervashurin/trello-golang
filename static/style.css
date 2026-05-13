@@ -559,6 +559,104 @@ body {
     margin-bottom: 12px;
 }
 
+/* Attachments */
+.attachments-section {
+    border-top: 1px solid #0f3460;
+    padding-top: 16px;
+    margin-top: 8px;
+}
+
+.attachments-section h3 {
+    font-size: 15px;
+    margin-bottom: 12px;
+}
+
+.attachment-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    align-items: center;
+}
+
+.file-drop-zone {
+    flex: 1;
+    border: 2px dashed #0f3460;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #1a1a2e;
+}
+
+.file-drop-zone:hover {
+    border-color: #e94560;
+    background: rgba(233, 69, 96, 0.05);
+}
+
+.file-drop-zone.drag-over {
+    border-color: #e94560;
+    background: rgba(233, 69, 96, 0.12);
+    border-style: solid;
+}
+
+.file-drop-hint {
+    font-size: 13px;
+    color: #a0a0b0;
+    pointer-events: none;
+}
+
+.file-drop-zone input[type="file"] {
+    display: none;
+}
+
+.attachments-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #0f3460;
+}
+
+.attachment-item:last-child {
+    border-bottom: none;
+}
+
+.attachment-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.attachment-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.attachment-name {
+    display: block;
+    font-size: 13px;
+    color: #e94560;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.attachment-name:hover {
+    text-decoration: underline;
+}
+
+.attachment-meta {
+    font-size: 11px;
+    color: #6c6c8a;
+}
+
 /* Toggle switch */
 .toggle-label {
     display: flex;

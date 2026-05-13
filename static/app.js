@@ -312,13 +312,119 @@ function openCardDetail(cardId) {
     const token = getToken();
     document.getElementById('commentForm').style.display = token ? 'flex' : 'none';
     document.getElementById('tokenIndicator').style.display = token ? 'none' : 'block';
+    document.getElementById('attachmentForm').style.display = token ? 'flex' : 'none';
+    document.getElementById('tokenAttachIndicator').style.display = token ? 'none' : 'block';
 
     api(`/api/card?id=${cardId}`).then(card => {
         document.getElementById('cardDetailTitle').textContent = card.title;
         document.getElementById('cardDetailDesc').textContent = card.description || 'Нет описания';
         document.getElementById('cardDetailModal').classList.add('active');
         loadComments(cardId);
+        loadAttachments(cardId);
     });
+}
+
+function loadAttachments(cardId) {
+    api(`/api/attachments?card_id=${cardId}`).then(atts => {
+        const list = document.getElementById('attachmentsList');
+        if (!atts || atts.length === 0) {
+            list.innerHTML = '<div class="comment-empty">Нет файлов</div>';
+            return;
+        }
+        list.innerHTML = atts.map(a => `
+            <div class="attachment-item">
+                <div class="attachment-icon">${getFileIcon(a.mime_type)}</div>
+                <div class="attachment-info">
+                    <a href="/api/files/${a.id}" target="_blank" class="attachment-name">${esc(a.file_name)}</a>
+                    <span class="attachment-meta">${formatFileSize(a.file_size)}</span>
+                </div>
+                ${a.user_id === getUserId() ? `<button class="btn btn-danger" onclick="deleteAttachment('${a.id}', event)" style="padding:1px 6px;font-size:11px;">&times;</button>` : ''}
+            </div>
+        `).join('');
+    });
+}
+
+function uploadFile() {
+    const input = document.getElementById('fileInput');
+    const file = input.files[0];
+    if (!file || !currentCardId) return;
+
+    const form = new FormData();
+    form.append('card_id', currentCardId);
+    form.append('file', file);
+
+    const token = getToken();
+    fetch('/api/attachments', {
+        method: 'POST',
+        headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+        body: form,
+    }).then(r => r.json()).then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        input.value = '';
+        resetFileDropZone();
+        loadAttachments(currentCardId);
+    });
+}
+
+function onFileSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('fileDropHint').textContent = file.name;
+}
+
+function onFileDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    document.getElementById('fileDropZone').classList.add('drag-over');
+}
+
+function onFileDragLeave(e) {
+    e.preventDefault();
+    document.getElementById('fileDropZone').classList.remove('drag-over');
+}
+
+function onFileDrop(e) {
+    e.preventDefault();
+    const zone = document.getElementById('fileDropZone');
+    zone.classList.remove('drag-over');
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const input = document.getElementById('fileInput');
+        input.files = files;
+        document.getElementById('fileDropHint').textContent = files[0].name;
+    }
+}
+
+function resetFileDropZone() {
+    document.getElementById('fileDropHint').textContent = 'Перетащите файл сюда или нажмите для выбора';
+    document.getElementById('fileInput').value = '';
+}
+
+function deleteAttachment(attId, e) {
+    e.stopPropagation();
+    api(`/api/attachment?id=${attId}`, { method: 'DELETE' }).then(() => {
+        loadAttachments(currentCardId);
+    });
+}
+
+function getFileIcon(mime) {
+    if (mime.startsWith('image/')) return '🖼';
+    if (mime.startsWith('video/')) return '🎬';
+    if (mime.startsWith('audio/')) return '🎵';
+    if (mime.includes('pdf')) return '📄';
+    if (mime.includes('zip') || mime.includes('rar') || mime.includes('tar')) return '📦';
+    if (mime.includes('text') || mime.includes('document') || mime.includes('sheet')) return '📝';
+    return '📎';
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+    return (bytes/1024/1024).toFixed(1) + ' MB';
 }
 
 function loadComments(cardId) {

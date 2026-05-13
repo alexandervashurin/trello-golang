@@ -110,6 +110,21 @@
                 </div>
                 <button class="btn btn-danger" onclick="deleteCardFromDetail()">Удалить</button>
             </div>
+            <div class="attachments-section">
+                <h3>Файлы</h3>
+                <div class="attachment-form" id="attachmentForm">
+                    <div class="file-drop-zone" id="fileDropZone"
+                        ondragover="onFileDragOver(event)"
+                        ondragleave="onFileDragLeave(event)"
+                        ondrop="onFileDrop(event)">
+                        <div class="file-drop-hint" id="fileDropHint">Перетащите файл сюда или нажмите для выбора</div>
+                        <input type="file" id="fileInput" onchange="onFileSelected(event)">
+                    </div>
+                    <button class="btn btn-primary" onclick="uploadFile()" id="uploadBtn">Загрузить</button>
+                </div>
+                <div id="tokenAttachIndicator" style="display:none" class="comments-auth-msg">Войдите в систему, чтобы загружать файлы</div>
+                <div class="attachments-list" id="attachmentsList"></div>
+            </div>
             <div class="comments-section">
                 <h3>Комментарии</h3>
                 <div id="tokenIndicator" style="display:none" class="comments-auth-msg">Чтобы оставлять комментарии, войдите в систему</div>
