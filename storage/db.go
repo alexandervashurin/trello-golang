@@ -92,6 +92,19 @@ func Migrate(pool *pgxpool.Pool) error {
 		)
 	`)
 
+	_, _ = pool.Exec(context.Background(), `
+		CREATE TABLE IF NOT EXISTS attachments (
+			id UUID PRIMARY KEY,
+			card_id UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			file_name VARCHAR(255) NOT NULL,
+			file_path VARCHAR(500) NOT NULL,
+			file_size BIGINT NOT NULL DEFAULT 0,
+			mime_type VARCHAR(100) NOT NULL DEFAULT 'application/octet-stream',
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		)
+	`)
+
 	log.Println("Database migration completed")
 	return nil
 }

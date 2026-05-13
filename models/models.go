@@ -50,6 +50,17 @@ func (c *Comment) Validate() error {
 	return validate.Struct(c)
 }
 
+type Attachment struct {
+	ID         string    `json:"id"`
+	CardID     string    `json:"card_id" validate:"required"`
+	UserID     string    `json:"user_id"`
+	FileName   string    `json:"file_name"`
+	FilePath   string    `json:"-"`
+	FileSize   int64     `json:"file_size"`
+	MimeType   string    `json:"mime_type"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
 type Card struct {
 	ID          string    `json:"id"`
 	ListID      string    `json:"list_id" validate:"required"`

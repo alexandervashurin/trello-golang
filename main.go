@@ -24,6 +24,7 @@ func main() {
 	handler := handlers.NewHandler(store)
 	authHandler := handlers.NewAuthHandler(store)
 	commentHandler := handlers.NewCommentHandler(store)
+	attachmentHandler := handlers.NewAttachmentHandler(store, "uploads")
 
 	mux := http.NewServeMux()
 
@@ -47,6 +48,11 @@ func main() {
 	mux.HandleFunc("POST /api/comments", handlers.AuthMiddleware(commentHandler.CreateComment))
 	mux.HandleFunc("GET /api/comments", handlers.OptionalAuth(commentHandler.GetComments))
 	mux.HandleFunc("DELETE /api/comment", handlers.AuthMiddleware(commentHandler.DeleteComment))
+
+	mux.HandleFunc("POST /api/attachments", handlers.AuthMiddleware(attachmentHandler.Upload))
+	mux.HandleFunc("GET /api/attachments", handlers.OptionalAuth(attachmentHandler.GetAttachments))
+	mux.HandleFunc("DELETE /api/attachment", handlers.AuthMiddleware(attachmentHandler.DeleteAttachment))
+	mux.HandleFunc("GET /api/files/{id}", handlers.OptionalAuth(attachmentHandler.ServeFile))
 
 	mux.Handle("GET /", http.FileServer(http.Dir("static")))
 

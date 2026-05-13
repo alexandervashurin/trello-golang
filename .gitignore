@@ -25,3 +25,6 @@ go.work
 
 # Built binaries
 trello-golang
+
+# Uploaded files
+uploads/

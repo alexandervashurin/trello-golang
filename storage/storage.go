@@ -286,6 +286,62 @@ func (s *Storage) DeleteComment(id string) error {
 	return err
 }
 
+// Attachments
+func (s *Storage) CreateAttachment(a *models.Attachment) error {
+	_, err := s.pool.Exec(context.Background(),
+		`INSERT INTO attachments (id, card_id, user_id, file_name, file_path, file_size, mime_type, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		a.ID, a.CardID, a.UserID, a.FileName, a.FilePath, a.FileSize, a.MimeType, a.CreatedAt,
+	)
+	return err
+}
+
+func (s *Storage) GetAttachmentsByCard(cardID string) ([]models.Attachment, error) {
+	rows, err := s.pool.Query(context.Background(),
+		`SELECT id, card_id, user_id, file_name, file_size, mime_type, created_at
+		FROM attachments WHERE card_id = $1 ORDER BY created_at ASC`,
+		cardID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var atts []models.Attachment
+	for rows.Next() {
+		var a models.Attachment
+		if err := rows.Scan(&a.ID, &a.CardID, &a.UserID, &a.FileName, &a.FileSize, &a.MimeType, &a.CreatedAt); err != nil {
+			return nil, err
+		}
+		atts = append(atts, a)
+	}
+	if atts == nil {
+		atts = []models.Attachment{}
+	}
+	return atts, nil
+}
+
+func (s *Storage) GetAttachment(id string) (*models.Attachment, error) {
+	row := s.pool.QueryRow(context.Background(),
+		`SELECT id, card_id, user_id, file_name, file_path, file_size, mime_type, created_at
+		FROM attachments WHERE id = $1`, id,
+	)
+	var a models.Attachment
+	err := row.Scan(&a.ID, &a.CardID, &a.UserID, &a.FileName, &a.FilePath, &a.FileSize, &a.MimeType, &a.CreatedAt)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &a, nil
+}
+
+func (s *Storage) DeleteAttachment(id string) error {
+	_, err := s.pool.Exec(context.Background(), `DELETE FROM attachments WHERE id = $1`, id)
+	return err
+}
+
 // Users
 func (s *Storage) CreateUser(user *models.User) error {
 	_, err := s.pool.Exec(context.Background(),
