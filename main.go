@@ -7,9 +7,11 @@ import (
 
 	"github.com/alexandervashurin/trello-golang/handlers"
 	"github.com/alexandervashurin/trello-golang/storage"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	db, err := storage.NewDB()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -42,6 +44,7 @@ func main() {
 
 	mux.HandleFunc("POST /api/cards", handlers.AuthMiddleware(handler.CreateCard))
 	mux.HandleFunc("GET /api/cards", handlers.OptionalAuth(handler.GetCardsByList))
+	mux.HandleFunc("GET /api/card", handlers.OptionalAuth(handler.GetCard))
 	mux.HandleFunc("PATCH /api/card", handlers.AuthMiddleware(handler.MoveCard))
 	mux.HandleFunc("DELETE /api/card", handlers.AuthMiddleware(handler.DeleteCard))
 
@@ -56,9 +59,12 @@ func main() {
 
 	mux.Handle("GET /", http.FileServer(http.Dir("static")))
 
-	port := ":8080"
-	if p := os.Getenv("PORT"); p != "" {
-		port = p
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	if port[0] != ':' {
+		port = ":" + port
 	}
 	log.Printf("Server starting on port %s", port)
 

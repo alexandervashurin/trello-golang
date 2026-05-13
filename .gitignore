@@ -28,3 +28,6 @@ trello-golang
 
 # Uploaded files
 uploads/
+
+# Environment variables
+.env

@@ -269,6 +269,44 @@ func (h *Handler) CreateCard(w http.ResponseWriter, r *http.Request) {
 	utils.RespondWithSuccess(w, card)
 }
 
+func (h *Handler) GetCard(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		utils.RespondWithError(w, http.StatusBadRequest, "ID is required")
+		return
+	}
+
+	card, err := h.storage.GetCard(id)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusInternalServerError, "Database error")
+		return
+	}
+	if card == nil {
+		utils.RespondWithError(w, http.StatusNotFound, "Card not found")
+		return
+	}
+
+	list, err := h.storage.GetList(card.ListID)
+	if err != nil || list == nil {
+		utils.RespondWithError(w, http.StatusNotFound, "List not found")
+		return
+	}
+
+	board, err := h.storage.GetBoard(list.BoardID)
+	if err != nil || board == nil {
+		utils.RespondWithError(w, http.StatusNotFound, "Board not found")
+		return
+	}
+
+	userID, ok := r.Context().Value(UserIDKey).(string)
+	if !board.IsPublic && (!ok || userID != board.UserID) {
+		utils.RespondWithError(w, http.StatusForbidden, "Access denied")
+		return
+	}
+
+	utils.RespondWithSuccess(w, card)
+}
+
 func (h *Handler) GetCardsByList(w http.ResponseWriter, r *http.Request) {
 	listID := r.URL.Query().Get("list_id")
 	if listID == "" {
