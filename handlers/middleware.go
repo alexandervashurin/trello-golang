@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -12,7 +13,15 @@ type contextKey string
 
 const UserIDKey contextKey = "user_id"
 
-var jwtSecret = []byte("trello-golang-secret-key-change-in-production")
+var jwtSecret []byte
+
+func init() {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "trello-golang-dev-secret-change-in-production"
+	}
+	jwtSecret = []byte(secret)
+}
 
 func ClaimsFromToken(r *http.Request) (string, bool) {
 	authHeader := r.Header.Get("Authorization")

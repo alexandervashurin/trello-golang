@@ -12,7 +12,7 @@ import (
 func NewDB() (*pgxpool.Pool, error) {
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
-		connStr = "postgres://trellouser:wzQ%7CjouYF1HeSp%2AIeb2nKKS%24JZeAn%40k%7C1nszW9A2qRwHHmtgv%2As9bT%3Fj%406pCuMNuFugu@localhost:5432/trello_db?sslmode=disable"
+		return nil, fmt.Errorf("DATABASE_URL environment variable is not set")
 	}
 
 	config, err := pgxpool.ParseConfig(connStr)
@@ -80,6 +80,17 @@ func Migrate(pool *pgxpool.Pool) error {
 	}
 
 	_, _ = pool.Exec(context.Background(), `ALTER TABLE boards ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE`)
+
+	_, _ = pool.Exec(context.Background(), `
+		CREATE TABLE IF NOT EXISTS comments (
+			id UUID PRIMARY KEY,
+			card_id UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			content TEXT NOT NULL,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		)
+	`)
 
 	log.Println("Database migration completed")
 	return nil

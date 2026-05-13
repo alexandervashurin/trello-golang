@@ -101,6 +101,30 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="cardDetailModal" onclick="closeModal(event)">
+        <div class="modal modal-wide">
+            <div class="modal-card-header">
+                <div>
+                    <h2 id="cardDetailTitle"></h2>
+                    <p id="cardDetailDesc" class="card-detail-desc"></p>
+                </div>
+                <button class="btn btn-danger" onclick="deleteCardFromDetail()">Удалить</button>
+            </div>
+            <div class="comments-section">
+                <h3>Комментарии</h3>
+                <div id="tokenIndicator" style="display:none" class="comments-auth-msg">Чтобы оставлять комментарии, войдите в систему</div>
+                <div class="comment-form" id="commentForm">
+                    <textarea id="commentInput" placeholder="Написать комментарий..."></textarea>
+                    <button class="btn btn-primary" onclick="addComment()">Отправить</button>
+                </div>
+                <div class="comments-list" id="commentsList"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/app.js"></script>
 </body>
 </html>

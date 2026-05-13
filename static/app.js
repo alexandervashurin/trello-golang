@@ -1,5 +1,6 @@
 let currentBoardId = null;
 let currentListId = null;
+let currentCardId = null;
 let isLoginMode = true;
 let draggedCardId = null;
 
@@ -289,7 +290,8 @@ function loadCards(lists) {
                         : cards.sort((a, b) => a.position - b.position).map(c => `
                             <div class="card-item" draggable="true"
                                 ondragstart="onCardDragStart(event, '${c.id}')"
-                                ondragend="onCardDragEnd(event)">
+                                ondragend="onCardDragEnd(event)"
+                                onclick="openCardDetail('${c.id}')">
                                 <h4>${esc(c.title)}</h4>
                                 ${c.description ? `<p>${esc(c.description)}</p>` : ''}
                                 <div class="card-actions">
@@ -303,6 +305,84 @@ function loadCards(lists) {
             </div>
         `).join('');
     });
+}
+
+function openCardDetail(cardId) {
+    currentCardId = cardId;
+    const token = getToken();
+    document.getElementById('commentForm').style.display = token ? 'flex' : 'none';
+    document.getElementById('tokenIndicator').style.display = token ? 'none' : 'block';
+
+    api(`/api/card?id=${cardId}`).then(card => {
+        document.getElementById('cardDetailTitle').textContent = card.title;
+        document.getElementById('cardDetailDesc').textContent = card.description || 'Нет описания';
+        document.getElementById('cardDetailModal').classList.add('active');
+        loadComments(cardId);
+    });
+}
+
+function loadComments(cardId) {
+    api(`/api/comments?card_id=${cardId}`).then(comments => {
+        const list = document.getElementById('commentsList');
+        if (!comments || comments.length === 0) {
+            list.innerHTML = '<div class="comment-empty">Нет комментариев</div>';
+            return;
+        }
+        list.innerHTML = comments.map(c => `
+            <div class="comment-item">
+                <div class="comment-header">
+                    <strong>${esc(c.username || 'Unknown')}</strong>
+                    <span class="comment-date">${formatDate(c.created_at)}</span>
+                    ${c.user_id === getUserId() ? `<button class="btn btn-danger" onclick="deleteComment('${c.id}', event)" style="padding:1px 6px;font-size:11px;">&times;</button>` : ''}
+                </div>
+                <div class="comment-content">${esc(c.content)}</div>
+            </div>
+        `).join('');
+    });
+}
+
+function addComment() {
+    const input = document.getElementById('commentInput');
+    const content = input.value.trim();
+    if (!content || !currentCardId) return;
+    api('/api/comments', {
+        method: 'POST',
+        body: JSON.stringify({ card_id: currentCardId, content }),
+    }).then(() => {
+        input.value = '';
+        loadComments(currentCardId);
+    });
+}
+
+function deleteComment(commentId, e) {
+    e.stopPropagation();
+    api(`/api/comment?id=${commentId}`, { method: 'DELETE' }).then(() => {
+        loadComments(currentCardId);
+    });
+}
+
+function deleteCardFromDetail() {
+    if (!currentCardId) return;
+    api(`/api/card?id=${currentCardId}`, { method: 'DELETE' }).then(() => {
+        closeModal();
+        renderBoard(currentBoardId);
+    });
+}
+
+function getUserId() {
+    try {
+        const token = getToken();
+        if (!token) return null;
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.sub;
+    } catch (e) {
+        return null;
+    }
+}
+
+function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 function onCardDragStart(e, cardId) {

@@ -23,11 +23,12 @@ func main() {
 	store := storage.NewStorage(db)
 	handler := handlers.NewHandler(store)
 	authHandler := handlers.NewAuthHandler(store)
+	commentHandler := handlers.NewCommentHandler(store)
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /api/register", authHandler.Register)
-	mux.HandleFunc("POST /api/login", authHandler.Login)
+	mux.HandleFunc("POST /api/register", handlers.LoginLimiter(authHandler.Register))
+	mux.HandleFunc("POST /api/login", handlers.LoginLimiter(authHandler.Login))
 	mux.HandleFunc("GET /api/me", handlers.AuthMiddleware(authHandler.Me))
 
 	mux.HandleFunc("POST /api/boards", handlers.AuthMiddleware(handler.CreateBoard))
@@ -42,6 +43,10 @@ func main() {
 	mux.HandleFunc("GET /api/cards", handlers.OptionalAuth(handler.GetCardsByList))
 	mux.HandleFunc("PATCH /api/card", handlers.AuthMiddleware(handler.MoveCard))
 	mux.HandleFunc("DELETE /api/card", handlers.AuthMiddleware(handler.DeleteCard))
+
+	mux.HandleFunc("POST /api/comments", handlers.AuthMiddleware(commentHandler.CreateComment))
+	mux.HandleFunc("GET /api/comments", handlers.OptionalAuth(commentHandler.GetComments))
+	mux.HandleFunc("DELETE /api/comment", handlers.AuthMiddleware(commentHandler.DeleteComment))
 
 	mux.Handle("GET /", http.FileServer(http.Dir("static")))
 

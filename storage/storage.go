@@ -2,11 +2,22 @@ package storage
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/alexandervashurin/trello-golang/models"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+func paginate(limit, offset int) string {
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	return fmt.Sprintf(" LIMIT %d OFFSET %d", limit, offset)
+}
 
 type Storage struct {
 	pool *pgxpool.Pool
@@ -60,9 +71,9 @@ func (s *Storage) GetBoard(id string) (*models.Board, error) {
 	return scanBoard(row)
 }
 
-func (s *Storage) GetAllBoards(userID string) ([]*models.Board, error) {
+func (s *Storage) GetAllBoards(userID string, limit, offset int) ([]*models.Board, error) {
 	rows, err := s.pool.Query(context.Background(),
-		`SELECT id, user_id, name, description, is_public, created_at, updated_at FROM boards WHERE user_id = $1 ORDER BY created_at DESC`,
+		`SELECT id, user_id, name, description, is_public, created_at, updated_at FROM boards WHERE user_id = $1 ORDER BY created_at DESC`+paginate(limit, offset),
 		userID,
 	)
 	if err != nil {
@@ -71,9 +82,9 @@ func (s *Storage) GetAllBoards(userID string) ([]*models.Board, error) {
 	return scanBoards(rows)
 }
 
-func (s *Storage) GetAllPublicBoards() ([]*models.Board, error) {
+func (s *Storage) GetAllPublicBoards(limit, offset int) ([]*models.Board, error) {
 	rows, err := s.pool.Query(context.Background(),
-		`SELECT id, user_id, name, description, is_public, created_at, updated_at FROM boards WHERE is_public = TRUE ORDER BY created_at DESC`,
+		`SELECT id, user_id, name, description, is_public, created_at, updated_at FROM boards WHERE is_public = TRUE ORDER BY created_at DESC`+paginate(limit, offset),
 	)
 	if err != nil {
 		return nil, err
@@ -197,6 +208,81 @@ func (s *Storage) UpdateCard(card *models.Card) error {
 
 func (s *Storage) DeleteCard(id string) error {
 	_, err := s.pool.Exec(context.Background(), `DELETE FROM cards WHERE id = $1`, id)
+	return err
+}
+
+// Comments
+func (s *Storage) CreateComment(c *models.Comment) error {
+	_, err := s.pool.Exec(context.Background(),
+		`INSERT INTO comments (id, card_id, user_id, content, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+		c.ID, c.CardID, c.UserID, c.Content, c.CreatedAt, c.UpdatedAt,
+	)
+	return err
+}
+
+func (s *Storage) GetCommentsByCard(cardID string, limit, offset int) ([]models.Comment, error) {
+	rows, err := s.pool.Query(context.Background(),
+		`SELECT c.id, c.card_id, c.user_id, u.username, c.content, c.created_at, c.updated_at
+		FROM comments c
+		JOIN users u ON u.id = c.user_id
+		WHERE c.card_id = $1
+		ORDER BY c.created_at ASC`+paginate(limit, offset),
+		cardID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var comments []models.Comment
+	for rows.Next() {
+		var c models.Comment
+		if err := rows.Scan(&c.ID, &c.CardID, &c.UserID, &c.Username, &c.Content, &c.CreatedAt, &c.UpdatedAt); err != nil {
+			return nil, err
+		}
+		comments = append(comments, c)
+	}
+	if comments == nil {
+		comments = []models.Comment{}
+	}
+	return comments, nil
+}
+
+func (s *Storage) GetComment(id string) (*models.Comment, error) {
+	row := s.pool.QueryRow(context.Background(),
+		`SELECT c.id, c.card_id, c.user_id, u.username, c.content, c.created_at, c.updated_at
+		FROM comments c
+		JOIN users u ON u.id = c.user_id
+		WHERE c.id = $1`, id,
+	)
+	var c models.Comment
+	err := row.Scan(&c.ID, &c.CardID, &c.UserID, &c.Username, &c.Content, &c.CreatedAt, &c.UpdatedAt)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &c, nil
+}
+
+func (s *Storage) GetCardBoardID(cardID string) (string, error) {
+	row := s.pool.QueryRow(context.Background(),
+		`SELECT l.board_id FROM cards c JOIN lists l ON l.id = c.list_id WHERE c.id = $1`, cardID,
+	)
+	var boardID string
+	err := row.Scan(&boardID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return "", nil
+		}
+		return "", err
+	}
+	return boardID, nil
+}
+
+func (s *Storage) DeleteComment(id string) error {
+	_, err := s.pool.Exec(context.Background(), `DELETE FROM comments WHERE id = $1`, id)
 	return err
 }
 

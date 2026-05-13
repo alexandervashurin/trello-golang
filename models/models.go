@@ -36,6 +36,20 @@ type List struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type Comment struct {
+	ID        string    `json:"id"`
+	CardID    string    `json:"card_id" validate:"required"`
+	UserID    string    `json:"user_id"`
+	Username  string    `json:"username,omitempty"`
+	Content   string    `json:"content" validate:"required,min=1,max=1000"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (c *Comment) Validate() error {
+	return validate.Struct(c)
+}
+
 type Card struct {
 	ID          string    `json:"id"`
 	ListID      string    `json:"list_id" validate:"required"`

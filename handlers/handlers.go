@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/alexandervashurin/trello-golang/models"
@@ -10,6 +11,18 @@ import (
 	"github.com/alexandervashurin/trello-golang/utils"
 	"github.com/google/uuid"
 )
+
+func parsePagination(r *http.Request) (limit, offset int) {
+	limit, _ = strconv.Atoi(r.URL.Query().Get("limit"))
+	offset, _ = strconv.Atoi(r.URL.Query().Get("offset"))
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	return
+}
 
 type Handler struct {
 	storage *storage.Storage
@@ -79,8 +92,9 @@ func (h *Handler) GetBoard(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) GetAllBoards(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(UserIDKey).(string)
+	limit, offset := parsePagination(r)
 
-	boards, err := h.storage.GetAllBoards(userID)
+	boards, err := h.storage.GetAllBoards(userID, limit, offset)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "Database error")
 		return
@@ -90,7 +104,8 @@ func (h *Handler) GetAllBoards(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetPublicBoards(w http.ResponseWriter, r *http.Request) {
-	boards, err := h.storage.GetAllPublicBoards()
+	limit, offset := parsePagination(r)
+	boards, err := h.storage.GetAllPublicBoards(limit, offset)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "Database error")
 		return
