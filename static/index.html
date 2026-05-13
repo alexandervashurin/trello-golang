@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trello Go</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div id="authPage">
+        <div class="auth-container">
+            <div class="auth-card">
+                <h1 class="auth-logo">Trello Go</h1>
+                <div id="authForm">
+                    <h2 id="authTitle">Вход</h2>
+                    <div id="authError" class="auth-error"></div>
+                    <input type="text" id="authUsername" placeholder="Имя пользователя" style="display:none">
+                    <input type="email" id="authEmail" placeholder="Email">
+                    <input type="password" id="authPassword" placeholder="Пароль">
+                    <button class="btn btn-primary auth-btn" id="authSubmitBtn" onclick="handleAuth()">Войти</button>
+                    <p class="auth-switch">
+                        <span id="authSwitchText">Нет аккаунта?</span>
+                        <a href="#" onclick="toggleAuthMode()" id="authSwitchLink">Зарегистрироваться</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app" style="display:none">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">Trello Go</h1>
+                <div class="header-right">
+                    <span id="userDisplay" class="user-name"></span>
+                    <button class="btn" onclick="logout()">Выйти</button>
+                </div>
+            </div>
+        </header>
+
+        <main id="mainContent">
+            <div id="boardsView" class="boards-view">
+                <div class="boards-header">
+                    <h2>Мои доски</h2>
+                    <button class="btn btn-primary" onclick="showAddBoardModal()">+ Новая доска</button>
+                </div>
+                <div class="boards-grid" id="boardsGrid"></div>
+                <div class="boards-header" style="margin-top:40px;">
+                    <h2>Публичные доски</h2>
+                </div>
+                <div class="boards-grid" id="publicBoardsGrid"></div>
+            </div>
+            <div id="boardView" class="board-view" style="display:none">
+                <div class="board-header">
+                    <button class="btn btn-back" onclick="showBoards()">&larr; Назад</button>
+                    <h2 id="boardTitle"></h2>
+                    <button class="btn btn-primary" onclick="showAddListModal()">+ Список</button>
+                </div>
+                <div class="board-columns" id="boardColumns"></div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="addBoardModal" onclick="closeModal(event)">
+        <div class="modal">
+            <h2>Новая доска</h2>
+            <input type="text" id="boardNameInput" placeholder="Название доски" autofocus>
+            <textarea id="boardDescInput" placeholder="Описание (необязательно)"></textarea>
+            <label class="toggle-label">
+                <input type="checkbox" id="boardPublicInput">
+                <span class="toggle-slider"></span>
+                <span>Публичная доска</span>
+            </label>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="createBoard()">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addListModal" onclick="closeModal(event)">
+        <div class="modal">
+            <h2>Новый список</h2>
+            <input type="text" id="listNameInput" placeholder="Название списка" autofocus>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="createList()">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addCardModal" onclick="closeModal(event)">
+        <div class="modal">
+            <h2>Новая карточка</h2>
+            <input type="text" id="cardTitleInput" placeholder="Название карточки" autofocus>
+            <textarea id="cardDescInput" placeholder="Описание (необязательно)"></textarea>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="createCard()">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>
